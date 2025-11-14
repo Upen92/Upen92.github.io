@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Handover Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .shift-info {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .shift-info {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .shift-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .info-card label {
+            font-size: 0.75em;
+            opacity: 0.9;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .info-card .value {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .info-card select,
+        .info-card input[type="date"],
+        .info-card input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 5px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+        }
+
+        .info-card select option {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-card input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        .info-card .editable-value {
+            padding: 8px;
+            border-radius: 5px;
+            min-height: 35px;
+        }
+
+        .info-card .editable-value[contenteditable="true"] {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: text;
+        }
+
+        .highlights {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .highlights h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .highlights ul {
+            margin-left: 20px;
+            list-style: none;
+        }
+
+        .highlight-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            color: #856404;
+        }
+
+        .highlight-text {
+            flex: 1;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .highlight-text[contenteditable="true"] {
+            background: rgba(255,255,255,0.5);
+            cursor: text;
+        }
+
+        .delete-highlight-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+            display: none;
+        }
+
+        .delete-highlight-btn:hover {
+            background: #c82333;
+        }
+
+        body.edit-mode .delete-highlight-btn {
+            display: inline-block;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .filter-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .filter-btn.active {
+            background: #764ba2;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .action-cell {
+            white-space: nowrap;
+        }
+
+        .priority-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .priority-normal {
+            color: #28a745;
+        }
+
+        .priority-urgent {
+            background: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-open {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-hold {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .ticket-number {
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .ticket-number:hover {
+            text-decoration: underline;
+        }
+
+        .update-date {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .maintenance-table {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            border: none;
+            background: #e0e0e0;
+            color: #333;
+            cursor: pointer;
+            border-radius: 25px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .export-btn {
+            background: #28a745;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .category-label {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .controls, .filter-btn, .export-btn, .delete-btn {
+                display: none !important;
+            }
+            .section {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let currentFilter = 'all';
+        let editMode = false;
+
+        function updateAllCounts() {
+            // Count tickets in each category
+            const ifsCount = document.querySelectorAll('#ifsTable tbody tr').length;
+            const ocilionCount = document.querySelectorAll('#ocilionTable tbody tr').length;
+            const headendCount = document.querySelectorAll('#headendTable tbody tr').length;
+            const adonissCount = document.querySelectorAll('#adonissTable tbody tr').length;
+            const otherCount = document.querySelectorAll('#otherTable tbody tr').length;
+            
+            // Update tab labels
+            document.querySelector('.tab[onclick*="ifs"]').textContent = `IFS Tickets (${ifsCount})`;
+            document.querySelector('.tab[onclick*="ocilion"]').textContent = `Ocilion Tickets (${ocilionCount})`;
+            document.querySelector('.tab[onclick*="headend"]').textContent = `Headend Tickets (${headendCount})`;
+            document.querySelector('.tab[onclick*="adoniss"]').textContent = `Adoniss Tickets (${adonissCount})`;
+            document.querySelector('.tab[onclick*="other"]').textContent = `Other Tickets (${otherCount})`;
+            
+            // Calculate total
+            const totalTickets = ifsCount + ocilionCount + headendCount + adonissCount + otherCount;
+            document.querySelector('.tab[onclick*="alltickets"]').textContent = `All Tickets (${totalTickets})`;
+            
+            // Update stats
+            updateStats();
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const editBtn = document.getElementById('editModeBtn');
+            const editMaintenanceBtn = document.getElementById('editMaintenanceBtn');
+            const saveBtn = document.getElementById('saveChangesBtn');
+            const saveMaintenanceBtn = document.getElementById('saveMaintenanceBtn');
+            const body = document.body;
+            
+            if (editMode) {
+                editBtn.textContent = '🔒 Lock Editing';
+                editBtn.style.background = '#f57c00';
+                if (editMaintenanceBtn) {
+                    editMaintenanceBtn.textContent = '🔒 Lock Editing';
+                    editMaintenanceBtn.style.background = '#f57c00';
+                }
+                saveBtn.style.display = 'inline-block';
+                if (saveMaintenanceBtn) {
+                    saveMaintenanceBtn.style.display = 'inline-block';
+                }
+                body.classList.add('edit-mode');
+                enableEditing();
+            } else {
+                editBtn.textContent = '✏️ Enable Editing';
+                editBtn.style.background = '#667eea';
+                if (editMaintenanceBtn) {
+                    editMaintenanceBtn.textContent = '✏️ Enable Editing';
+                    editMaintenanceBtn.style.background = '#667eea';
+                }
+                saveBtn.style.display = 'none';
+                if (saveMaintenanceBtn) {
+                    saveMaintenanceBtn.style.display = 'none';
+                }
+                body.classList.remove('edit-mode');
+                disableEditing();
+            }
+        }
+
+        function enableEditing() {
+            const editableFields = document.querySelectorAll('.editable-value');
+            editableFields.forEach(field => {
+                field.contentEditable = true;
+                field.style.cursor = 'text';
+            });
+
+            const allTables = document.querySelectorAll('table tbody td');
+            allTables.forEach(cell => {
+                if (!cell.classList.contains('action-cell')) {
+                    cell.contentEditable = true;
+                    cell.style.cursor = 'text';
+                    cell.style.border = '1px dashed #ccc';
+                    cell.style.padding = '12px 15px';
+                }
+            });
+
+            const highlights = document.querySelectorAll('.highlight-text');
+            highlights.forEach(item => {
+                item.contentEditable = true;
+                item.style.cursor = 'text';
+            });
+
+            addDeleteButtons();
+        }
+
+        function addDeleteButtons() {
+            const allTables = document.querySelectorAll('table tbody');
+            
+            allTables.forEach(tbody => {
+                const rows = tbody.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    if (!row.querySelector('.action-cell')) {
+                        const actionCell = document.createElement('td');
+                        actionCell.className = 'action-cell';
+                        
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.textContent = '🗑️ Delete';
+                        deleteBtn.type = 'button';
+                        
+                        deleteBtn.onclick = function() {
+                            if (confirm('Delete this row?')) {
+                                row.remove();
+                                updateAllCounts();
+                            }
+                            return false;
+                        };
+                        
+                        actionCell.appendChild(deleteBtn);
+                        row.appendChild(actionCell);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('table thead tr').forEach(headerRow => {
+                if (!headerRow.querySelector('.actions-header')) {
+                    const th = document.createElement('th');
+                    th.className = 'actions-header';
+                    th.textContent = 'Actions';
+                    th.style.width = '120px';
+                    headerRow.appendChild(th);
+                }
+            });
+        }
+
+        function removeDeleteButtons() {
+            const actionCells = document.querySelectorAll('.action-cell');
+            actionCells.forEach(cell => cell.remove());
+            
+            const actionHeaders = document.querySelectorAll('.actions-header');
+            actionHeaders.forEach(header => header.remove());
+        }
+
+        function disableEditing() {
+            const editableFields = document.querySelectorAll('.editable-value');
+            editableFields.forEach(field => {
+                field.contentEditable = false;
+                field.style.cursor = 'default';
+            });
+
+            const allTables = document.querySelectorAll('table tbody td');
+            allTables.forEach(cell => {
+                cell.contentEditable = false;
+                cell.style.cursor = 'default';
+                cell.style.border = 'none';
+            });
+
+            const highlights = document.querySelectorAll('.highlight-text');
+            highlights.forEach(item => {
+                item.contentEditable = false;
+                item.style.cursor = 'default';
+            });
+
+            removeDeleteButtons();
+        }
+
+        function saveChanges() {
+            alert('✅ Changes saved successfully!');
+            toggleEditMode();
+        }
+
+        function saveMaintenanceChanges() {
+            saveChanges();
+        }
+
+        function addHighlightItem(text = 'New highlight - click to edit') {
+            const highlightsList = document.querySelector('.highlights ul');
+            const newItem = document.createElement('li');
+            newItem.className = 'highlight-item';
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'highlight-text';
+            textSpan.textContent = text;
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-highlight-btn';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.onclick = function() {
+                if (confirm('Delete this highlight?')) {
+                    newItem.remove();
+                }
+            };
+            
+            newItem.appendChild(textSpan);
+            newItem.appendChild(deleteBtn);
+            highlightsList.appendChild(newItem);
+            
+            return textSpan;
+        }
+
+        function addNewHighlight() {
+            const textSpan = addHighlightItem();
+            
+            if (!editMode) {
+                toggleEditMode();
+            }
+            
+            textSpan.focus();
+        }
+
+        function addNewTicket() {
+            const activeTab = document.querySelector('.tab-content.active');
+            
+            if (activeTab && activeTab.id === 'ocilion') {
+                let table = activeTab.querySelector('table');
+                
+                if (!table) {
+                    const emptyMessage = activeTab.querySelector('p');
+                    if (emptyMessage) emptyMessage.remove();
+                    
+                    const tableHtml = `
+                        <table id="ocilionTable">
+                            <thead>
+                                <tr>
+                                    <th>Ticket #</th>
+                                    <th>Created</th>
+                                    <th>Category</th>
+                                    <th>Issue</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Assignee</th>
+                                    <th>Update</th>
+                                    <th>Follow Up</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    `;
+                    activeTab.insertAdjacentHTML('beforeend', tableHtml);
+                    table = activeTab.querySelector('table');
+                }
+            }
+            
+            const table = activeTab.querySelector('table tbody');
+            
+            if (!table) {
+                alert('Unable to find table. Please try again.');
+                return;
+            }
+
+            const newRow = document.createElement('tr');
+            const colCount = table.closest('table').querySelectorAll('thead th').length - (editMode ? 1 : 0);
+            
+            for (let i = 0; i < colCount; i++) {
+                const cell = document.createElement('td');
+                cell.textContent = '';
+                cell.contentEditable = true;
+                cell.style.cursor = 'text';
+                newRow.appendChild(cell);
+            }
+            
+            table.insertBefore(newRow, table.firstChild);
+            
+            if (!editMode) {
+                toggleEditMode();
+            } else {
+                const actionCell = document.createElement('td');
+                actionCell.className = 'action-cell';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '🗑️ Delete';
+                deleteBtn.type = 'button';
+                deleteBtn.onclick = function() {
+                    if (confirm('Delete this row?')) {
+                        newRow.remove();
+                        updateAllCounts();
+                    }
+                    return false;
+                };
+                
+                actionCell.appendChild(deleteBtn);
+                newRow.appendChild(actionCell);
+            }
+            
+            updateAllCounts();
+            newRow.firstChild.focus();
+        }
+
+        function addNewMaintenance() {
+            const table = document.getElementById('maintenanceTable');
+            const tbody = table.querySelector('tbody');
+            
+            const newRow = document.createElement('tr');
+            const colCount = 6;
+            
+            for (let i = 0; i < colCount; i++) {
+                const cell = document.createElement('td');
+                cell.textContent = '';
+                cell.contentEditable = true;
+                cell.style.cursor = 'text';
+                newRow.appendChild(cell);
+            }
+            
+            tbody.insertBefore(newRow, tbody.firstChild);
+            
+            if (!editMode) {
+                toggleEditMode();
+            } else {
+                const actionCell = document.createElement('td');
+                actionCell.className = 'action-cell';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '🗑️ Delete';
+                deleteBtn.type = 'button';
+                deleteBtn.onclick = function() {
+                    if (confirm('Delete this row?')) {
+                        newRow.remove();
+                    }
+                    return false;
+                };
+                
+                actionCell.appendChild(deleteBtn);
+                newRow.appendChild(actionCell);
+            }
+            
+            newRow.firstChild.focus();
+        }
+
+        function updateStats() {
+            const allTickets = document.querySelectorAll('#ifsTable tbody tr, #ocilionTable tbody tr, #headendTable tbody tr, #adonissTable tbody tr, #otherTable tbody tr').length;
+            document.getElementById('totalTickets').textContent = allTickets;
+
+            let highPriority = 0;
+            let openCount = 0, pendingCount = 0, holdCount = 0;
+            
+            // Count in each ticket category table
+            const tables = ['ifsTable', 'ocilionTable', 'headendTable', 'adonissTable', 'otherTable'];
+            
+            tables.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        // Get all cells in the row
+                        const cells = row.querySelectorAll('td');
+                        
+                        // Check priority column (usually column 5 or 6)
+                        cells.forEach(cell => {
+                            const cellText = cell.textContent.trim();
+                            if (cellText === 'High' || cellText === 'Urgent') {
+                                highPriority++;
+                            }
+                        });
+                        
+                        // Check status column - look for status badges
+                        const statusBadges = row.querySelectorAll('.status-badge');
+                        let statusCounted = false;
+                        
+                        statusBadges.forEach(badge => {
+                            if (!statusCounted) {
+                                if (badge.classList.contains('status-open')) {
+                                    openCount++;
+                                    statusCounted = true;
+                                } else if (badge.classList.contains('status-pending')) {
+                                    pendingCount++;
+                                    statusCounted = true;
+                                } else if (badge.classList.contains('status-hold')) {
+                                    holdCount++;
+                                    statusCounted = true;
+                                }
+                            }
+                        });
+                        
+                        // If no status badge found, check text content
+                        if (!statusCounted) {
+                            const rowText = row.textContent.toLowerCase();
+                            if (rowText.includes('open') && !rowText.includes('on-hold') && !rowText.includes('hold')) {
+                                openCount++;
+                            } else if (rowText.includes('pending')) {
+                                pendingCount++;
+                            } else if (rowText.includes('hold') || rowText.includes('on-hold')) {
+                                holdCount++;
+                            }
+                        }
+                    });
+                }
+            });
+            
+            document.getElementById('highPriority').textContent = highPriority;
+            document.getElementById('openTickets').textContent = openCount;
+            document.getElementById('pendingTickets').textContent = pendingCount;
+            document.getElementById('onHoldTickets').textContent = holdCount;
+        }
+
+        function showTab(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function filterByPriority(priority) {
+            currentFilter = priority;
+            
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const tables = ['ifsTable', 'ocilionTable', 'headendTable', 'adonissTable', 'otherTable', 'allTicketsTable'];
+            tables.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const priorityCell = row.cells[5] || row.cells[4];
+                        if (priority === 'all') {
+                            row.style.display = '';
+                        } else {
+                            const priorityText = priorityCell ? priorityCell.textContent.trim() : '';
+                            row.style.display = priorityText.includes(priority) ? '' : 'none';
+                        }
+                    });
+                }
+            });
+        }
+
+        function exportToCSV() {
+            const activeTab = document.querySelector('.tab-content.active');
+            const table = activeTab.querySelector('table');
+            
+            if (!table) {
+                alert('No table data to export');
+                return;
+            }
+
+            let csv = [];
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td, th');
+                const csvRow = [];
+                cols.forEach(col => {
+                    if (!col.classList.contains('action-cell') && !col.classList.contains('actions-header')) {
+                        csvRow.push('"' + col.textContent.replace(/"/g, '""') + '"');
+                    }
+                });
+                if (csvRow.length > 0) {
+                    csv.push(csvRow.join(','));
+                }
+            });
+
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'handover_tickets_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+
+        function populateAllTicketsTable() {
+            const allTicketsBody = document.getElementById('allTicketsTable').querySelector('tbody');
+            allTicketsBody.innerHTML = '';
+            
+            const tables = [
+                {id: 'ifsTable', category: 'IFS'},
+                {id: 'ocilionTable', category: 'Ocilion'},
+                {id: 'headendTable', category: 'Headend'},
+                {id: 'adonissTable', category: 'Adoniss'},
+                {id: 'otherTable', category: 'Other'}
+            ];
+            
+            tables.forEach(tableInfo => {
+                const table = document.getElementById(tableInfo.id);
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const newRow = row.cloneNode(true);
+                        
+                        // Remove action cell if exists
+                        const actionCell = newRow.querySelector('.action-cell');
+                        if (actionCell) actionCell.remove();
+                        
+                        // Add category label to first cell
+                        const firstCell = newRow.querySelector('td');
+                        if (firstCell) {
+                            const categoryLabel = document.createElement('span');
+                            categoryLabel.className = 'category-label';
+                            categoryLabel.textContent = tableInfo.category;
+                            firstCell.insertBefore(categoryLabel, firstCell.firstChild);
+                            firstCell.insertBefore(document.createTextNode(' '), firstCell.childNodes[1]);
+                        }
+                        
+                        allTicketsBody.appendChild(newRow);
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const dateInput = document.getElementById('shiftDate');
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
+            
+            updateAllCounts();
+            populateAllTicketsTable();
+
+            const searchBox = document.getElementById('searchBox');
+            searchBox.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const tables = ['ifsTable', 'ocilionTable', 'headendTable', 'adonissTable', 'otherTable', 'allTicketsTable'];
+                
+                tables.forEach(tableId => {
+                    const table = document.getElementById(tableId);
+                    if (table) {
+                        const rows = table.querySelectorAll('tbody tr');
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(searchTerm) ? '' : 'none';
+                        });
+                    }
+                });
+            });
+            
+            // Add observer to update all tickets when switching tabs
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setTimeout(() => {
+                        if (document.getElementById('alltickets').classList.contains('active')) {
+                            populateAllTicketsTable();
+                        }
+                    }, 100);
+                });
+            });
+        });
+    </script>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Shift Handover Dashboard</h1>
+            
+            <div class="shift-info">
+                <div class="info-card">
+                    <label>Date</label>
+                    <input type="date" id="shiftDate">
+                </div>
+                <div class="info-card">
+                    <label>Shift Time</label>
+                    <select id="shiftTime">
+                        <option value="11:00 PM to 08:00 AM">11:00 PM to 08:00 AM</option>
+                        <option value="07:00 AM to 04:00 PM">07:00 AM to 04:00 PM</option>
+                        <option value="03:00 PM to 12:00 AM">03:00 PM to 12:00 AM</option>
+                    </select>
+                </div>
+                <div class="info-card">
+                    <label>Handover From</label>
+                    <div class="value editable-value" id="engineerName">Urvesh</div>
+                </div>
+                <div class="info-card">
+                    <label>Handover To</label>
+                    <div class="value editable-value" id="handoverTo">Upendra</div>
+                </div>
+                <div class="info-card">
+                    <label>SEV 1 in Progress</label>
+                    <select id="sev1Status">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="info-card">
+                    <label>Genesys Status</label>
+                    <select id="genesysStatus">
+                        <option value="Logged Out">Logged Out</option>
+                        <option value="Logged In">Logged In</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="highlights">
+                <h3>📌 Important Highlights</h3>
+                <ul>
+                    <li class="highlight-item">
+                        <span class="highlight-text">Maintain all highlight points at: <code>\shares\Pune\Project Shares\VOC\Highlighted_Things_of_Daily_Status_Email.xlsx</code></span>
+                        <button class="delete-highlight-btn" onclick="if(confirm('Delete this highlight?')) this.closest('li').remove();">🗑️</button>
+                    </li>
+                    <li class="highlight-item">
+                        <span class="highlight-text">For any CTS S3 Server issue, reach out to <strong>Chris Potter</strong></span>
+                        <button class="delete-highlight-btn" onclick="if(confirm('Delete this highlight?')) this.closest('li').remove();">🗑️</button>
+                    </li>
+                    <li class="highlight-item">
+                        <span class="highlight-text">Checksum mismatches are auto-resolvable errors; no need to raise Zendesk tickets, just wait</span>
+                        <button class="delete-highlight-btn" onclick="if(confirm('Delete this highlight?')) this.closest('li').remove();">🗑️</button>
+                    </li>
+                </ul>
+                <button class="filter-btn" onclick="addNewHighlight()" style="margin-top: 15px;">➕ Add New Highlight</button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTickets">0</div>
+                <div class="stat-label">Total Tickets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="highPriority">0</div>
+                <div class="stat-label">High Priority</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="openTickets">0</div>
+                <div class="stat-label">Open</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingTickets">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="onHoldTickets">0</div>
+                <div class="stat-label">On Hold</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🗓️ Scheduled Maintenance and Events</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <button class="filter-btn" onclick="addNewMaintenance()">➕ Add New Maintenance Event</button>
+                <button class="filter-btn" id="editMaintenanceBtn" onclick="toggleEditMode()">✏️ Enable Editing</button>
+                <button class="filter-btn" id="saveMaintenanceBtn" onclick="saveMaintenanceChanges()" style="display: none; background: #28a745;">💾 Save Changes</button>
+            </div>
+            <div class="maintenance-table">
+                <table id="maintenanceTable">
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th>Change ID</th>
+                            <th>Status Page</th>
+                            <th>Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scheduled Maintenance for US-UK Circuit – 446341582</td>
+                            <td>US-UK Circuit – 446341582</td>
+                            <td>Teams meeting scheduled</td>
+                            <td>November 19, 2025</td>
+                            <td>10:30 AM</td>
+                            <td>2:30 PM</td>
+                        </tr>
+                        <tr>
+                            <td>Scheduled Maintenance for US-UK Circuit - 446341582</td>
+                            <td>US-UK Circuit – 446341582</td>
+                            <td>Teams meeting scheduled</td>
+                            <td>January 7, 2026</td>
+                            <td>12:30 PM</td>
+                            <td>5:30 PM</td>
+                        </tr>
+                        <tr>
+                            <td>Re: Scheduling for an OS upgrade</td>
+                            <td>EPB of Chattanooga – Chattanooga, TN_Aspera</td>
+                            <td>Teams meeting scheduled</td>
+                            <td>November 19, 2025</td>
+                            <td>08:30 PM</td>
+                            <td>09:30 PM</td>
+                        </tr>
+                        <tr>
+                            <td>Dove: Disable Dove playlist / instant update functionality</td>
+                            <td>18372063669</td>
+                            <td>Status page scheduled</td>
+                            <td>November 13, 2025</td>
+                            <td>15:00 PM</td>
+                            <td>16:30 PM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('alltickets')">All Tickets (0)</button>
+                <button class="tab" onclick="showTab('ifs')">IFS Tickets (0)</button>
+                <button class="tab" onclick="showTab('ocilion')">Ocilion Tickets (0)</button>
+                <button class="tab" onclick="showTab('headend')">Headend Tickets (0)</button>
+                <button class="tab" onclick="showTab('adoniss')">Adoniss Tickets (0)</button>
+                <button class="tab" onclick="showTab('other')">Other Tickets (0)</button>
+            </div>
+
+            <div class="controls">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search tickets by number, category, or issue...">
+                <button class="filter-btn" id="editModeBtn" onclick="toggleEditMode()">✏️ Enable Editing</button>
+                <button class="filter-btn" id="saveChangesBtn" onclick="saveChanges()" style="display: none; background: #28a745;">💾 Save Changes</button>
+                <button class="filter-btn" onclick="addNewTicket()">➕ Add Ticket</button>
+                <button class="filter-btn" onclick="filterByPriority('all')">All</button>
+                <button class="filter-btn" onclick="filterByPriority('High')">High Priority</button>
+                <button class="filter-btn" onclick="filterByPriority('Urgent')">Urgent</button>
+                <button class="export-btn" onclick="exportToCSV()">📥 Export to CSV</button>
+            </div>
+
+            <div id="alltickets" class="tab-content active">
+                <h3>All Tickets (Combined View)</h3>
+                <table id="allTicketsTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Created</th>
+                            <th>Category</th>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Update/Action</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="ifs" class="tab-content">
+                <h3>IFS Tickets</h3>
+                <table id="ifsTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Created</th>
+                            <th>Category</th>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Update</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ticket-number">31444</td>
+                            <td>6/5/2025</td>
+                            <td>Starhub</td>
+                            <td>Edge Browser Fail Playback 10 Minutes Interval</td>
+                            <td><span class="status-badge status-hold">Hold</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Varun</td>
+                            <td>Issue pushed to Nagra team</td>
+                            <td class="update-date">13th Oct</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">33177</td>
+                            <td>7/18/2025</td>
+                            <td>Starhub</td>
+                            <td>Tizen v5.7.5 stuck loading for 21 TV Models</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Rahul</td>
+                            <td>Certification completed for Tizen 6.0+. Pending Samsung confirmation</td>
+                            <td class="update-date">13th Oct</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">34334</td>
+                            <td>8/18/2025</td>
+                            <td>Starhub</td>
+                            <td>Android Nagra View start Broadpeak Crashes</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Vivek</td>
+                            <td>Starhub provided logs. Lai checking</td>
+                            <td class="update-date">13th Oct</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37628</td>
+                            <td>11/4/2025</td>
+                            <td>Starhub</td>
+                            <td>PLA-1357-NAG - React Native Video Error: Decoder Error</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Could not reproduce on Pixel 8. Requested logs</td>
+                            <td class="update-date">4th Nov</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="ocilion" class="tab-content">
+                <h3>Ocilion Tickets</h3>
+                <table id="ocilionTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Created</th>
+                            <th>Category</th>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Update</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="headend" class="tab-content">
+                <h3>Headend Tickets</h3>
+                <table id="headendTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Created</th>
+                            <th>Headend</th>
+                            <th>Issue</th>
+                            <th>Max Session</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Status</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ticket-number">37699</td>
+                            <td>10/29/2025</td>
+                            <td>Cspire</td>
+                            <td>Getting Disk write failed (server)</td>
+                            <td>1 from 0</td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td><span class="status-badge status-open">Space cleared</span></td>
+                            <td class="update-date">11th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37802</td>
+                            <td>7th Nov</td>
+                            <td>Marquette Adams_Innovative2</td>
+                            <td>Assets Delivery Confirmation Issue</td>
+                            <td>NA</td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td><span class="status-badge status-open">Email sent to customer</span></td>
+                            <td class="update-date">11th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37804</td>
+                            <td>7th Nov</td>
+                            <td>Service Electric Cablevision Birdsboro PA - Tivo</td>
+                            <td>Aspera Node Configuration</td>
+                            <td>NA</td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Global IT</td>
+                            <td><span class="status-badge status-open">Assigned to Global IT</span></td>
+                            <td class="update-date">7th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37846</td>
+                            <td>8th Nov</td>
+                            <td>Service Electric Cablevision Birdsboro PA - Tivo</td>
+                            <td>Insufficient permissions</td>
+                            <td>Set to 7</td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td><span class="status-badge status-open">Fixed - Monitoring</span></td>
+                            <td class="update-date">11 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37928</td>
+                            <td>11 Nov</td>
+                            <td>Westman_Evolution (1034)</td>
+                            <td>Connection lost in midst of data session</td>
+                            <td>0 from 3</td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Varun</td>
+                            <td><span class="status-badge status-open">Mail sent to headend team</span></td>
+                            <td class="update-date">11 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">-</td>
+                            <td>12 Nov</td>
+                            <td>RE: Headend Status Update</td>
+                            <td>Email by stepan</td>
+                            <td>-</td>
+                            <td class="priority-normal">Normal</td>
+                            <td>-</td>
+                            <td><span class="status-badge status-open">Email sent to CS team</span></td>
+                            <td class="update-date">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="adoniss" class="tab-content">
+                <h3>Adoniss Tickets</h3>
+                <table id="adonissTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Created</th>
+                            <th>Category</th>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Update</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ticket-number">30342</td>
+                            <td>-</td>
+                            <td>Hoover</td>
+                            <td>Hoover Enhancement - Update code for audio token</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Urvesh</td>
+                            <td>Ready for Prod deployment</td>
+                            <td class="update-date">03-OCT</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">20377</td>
+                            <td>13/9/2024</td>
+                            <td>Adonis</td>
+                            <td>A2 BUG - Copy Package function should display Active Tiers only</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Investigating. Will prioritize in next sprint</td>
+                            <td class="update-date">23rd Oct</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">32389</td>
+                            <td>-</td>
+                            <td>Adoniss</td>
+                            <td>Telefonica CP Planner - UK to US date format issues</td>
+                            <td><span class="status-badge status-hold">On-Hold</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Urvesh</td>
+                            <td>Not production issue. Timeline uncertain</td>
+                            <td class="update-date">18th Sept</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">33818</td>
+                            <td>-</td>
+                            <td>Adoniss</td>
+                            <td>Tenant ID/Juicebox code deployment</td>
+                            <td><span class="status-badge status-hold">On-Hold</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Urvesh</td>
+                            <td>Not production issue. Timeline uncertain</td>
+                            <td class="update-date">18th Sept</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">34173</td>
+                            <td>-</td>
+                            <td>Adoniss</td>
+                            <td>Adoniss is sending out MDUs automatically with no change</td>
+                            <td><span class="status-badge status-hold">On-Hold</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Upendra</td>
+                            <td>Not production issue. Timeline uncertain</td>
+                            <td class="update-date">18th Sept</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">35552</td>
+                            <td>09/17/2025</td>
+                            <td>Adonis</td>
+                            <td>Duplicate Correlation IDs</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Varun</td>
+                            <td>Informed Adonis team</td>
+                            <td class="update-date">3 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">35656</td>
+                            <td>09/19/2025</td>
+                            <td>Adonis</td>
+                            <td>Additional Column Required for Adoniss Report</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Asked for update from Sumit</td>
+                            <td class="update-date">6th NOV</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">36056</td>
+                            <td>09/29/2025</td>
+                            <td>Adoniss</td>
+                            <td>Virgin UK SVOD- A2 Encoding Queue - Ignore Admarkers</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Saurabh</td>
+                            <td>Informed in Group</td>
+                            <td class="update-date">7th NOV</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37954</td>
+                            <td>12th Nov</td>
+                            <td>Adoniss</td>
+                            <td>Adoniss Content Issue crashing</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Urvesh</td>
+                            <td>Informed in Adoniss group</td>
+                            <td class="update-date">12th Nov</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="other" class="tab-content">
+                <h3>Other Important Tickets</h3>
+                <table id="otherTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Created</th>
+                            <th>Category</th>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Action Required</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ticket-number">28378</td>
+                            <td>4/5/2025</td>
+                            <td>AE Integration</td>
+                            <td>AE Integration - MRSS Feed - Events not created since Feb 11 2025</td>
+                            <td><span class="status-badge status-hold">On Hold</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Varun</td>
+                            <td>AE to confirm MRSS feed removal. VU proceeding with Distribution XMLs</td>
+                            <td class="update-date">8 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">35820</td>
+                            <td>9/24/2025</td>
+                            <td>Adoniss</td>
+                            <td>Hulu - New Metadata Spec - New Fields Request</td>
+                            <td><span class="status-badge status-hold">On hold</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Urvesh</td>
+                            <td>Very low priority; required before 2026</td>
+                            <td class="update-date">30th sept</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">36392</td>
+                            <td>10/07/2025</td>
+                            <td>Enhancement ticket</td>
+                            <td>PBS - API Enhancement - Include ingestion status</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Urvesh</td>
+                            <td>Added in backlog (VBQT-73435)</td>
+                            <td class="update-date">29th Oct</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">36661</td>
+                            <td>11/10/2025</td>
+                            <td>Enhancement ticket</td>
+                            <td>HULU - S3 API Integration</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Abhishek</td>
+                            <td>Requested an update on the ticket</td>
+                            <td class="update-date">22nd Oct</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37195</td>
+                            <td>23 Oct</td>
+                            <td>Media suite</td>
+                            <td>MediaSuite component access needed</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Varun</td>
+                            <td>Access provided. Waiting for confirmation</td>
+                            <td class="update-date">3 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37472</td>
+                            <td>30 Oct</td>
+                            <td>Juicebox</td>
+                            <td>Virgin Workflow - investigation for duplicate WO</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Varun</td>
+                            <td>Routed to Canada Juicebox. Elena checking</td>
+                            <td class="update-date">11 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37498</td>
+                            <td>31/10/2025</td>
+                            <td>MAM</td>
+                            <td>AE - MAM - Please Ingest Files into Orange Jira (Oct 30, 2025)</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Urvesh</td>
+                            <td>Informed in MAM group - two files still missing</td>
+                            <td class="update-date">5 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">36320</td>
+                            <td>3 Oct</td>
+                            <td>Juicebox</td>
+                            <td>CWO being by-passed for Virgin Trailer</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Varun</td>
+                            <td>Fix to be driven by Adoniss team. Informed in group</td>
+                            <td class="update-date">4 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37534</td>
+                            <td>31 Oct</td>
+                            <td>Juicebox</td>
+                            <td>Re process materials</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-high">High</td>
+                            <td>Varun</td>
+                            <td>Autolinking won't happen if Provider Package Link changed</td>
+                            <td class="update-date">7 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37695</td>
+                            <td>5th Nov</td>
+                            <td>DOP</td>
+                            <td>MAM error</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Old error received again. Informed in MAM group</td>
+                            <td class="update-date">11th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37641</td>
+                            <td>4 nov</td>
+                            <td>Juicebox</td>
+                            <td>Juicebox 2 issues</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Low</td>
+                            <td>Urvesh</td>
+                            <td>Told user to check with another wifi or from office</td>
+                            <td class="update-date">5 nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37752</td>
+                            <td>6th Nov</td>
+                            <td>MetaVU</td>
+                            <td>new brazil rating and age descriptor</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Informed Kostas to check and implement</td>
+                            <td class="update-date">6th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37808</td>
+                            <td>7th Nov</td>
+                            <td>Juicebox</td>
+                            <td>No aswo available for new imported titles- Virgin TVOD</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Requested for correlation Ids</td>
+                            <td class="update-date">7th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37849</td>
+                            <td>8th Nov</td>
+                            <td>SKY</td>
+                            <td>Signiant Transfers out of service</td>
+                            <td><span class="status-badge status-hold">On-hold</span></td>
+                            <td class="priority-urgent">Urgent</td>
+                            <td>IT</td>
+                            <td>RCA is pending. RCA asked again</td>
+                            <td class="update-date">11 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37886</td>
+                            <td>10 Nov</td>
+                            <td>MAM</td>
+                            <td>AE - MAM - DOP File Registration Stalled - Piece ID 508439</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Varun</td>
+                            <td>Informed in MAM group</td>
+                            <td class="update-date">10 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37887</td>
+                            <td>10 Nov</td>
+                            <td>MAM</td>
+                            <td>AE - MAM - Please Migrate Files to Vidispine</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Varun</td>
+                            <td>Informed in MAM group</td>
+                            <td class="update-date">10 Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37913</td>
+                            <td>11th Nov</td>
+                            <td>Juicebox</td>
+                            <td>On hold vx's for Trailer despite that it's the correct ones</td>
+                            <td><span class="status-badge status-open">Open</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Informed in AssetVU group. Follow up further</td>
+                            <td class="update-date">11th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37869</td>
+                            <td>11th Nov</td>
+                            <td>Adonis / Orange Jira</td>
+                            <td>User account - Jonathan Myrianthous</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Upendra</td>
+                            <td>Requested for the Jira Url to provide access</td>
+                            <td class="update-date">11th Nov</td>
+                        </tr>
+                        <tr>
+                            <td class="ticket-number">37943</td>
+                            <td>12th nov</td>
+                            <td>Mediasuite</td>
+                            <td>Full Access to Media Suite</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="priority-normal">Normal</td>
+                            <td>Urvesh</td>
+                            <td>Access provided waiting for confirmation</td>
+                            <td class="update-date">12th Nov</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
